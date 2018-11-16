@@ -1,45 +1,56 @@
-.global main
-.section .rodata // contast data
-/*Prompt message*/
-prompt: .asciz "Enter a positive integer and I'll add it to a running total (negative value entered to stop): "
-
-/*Response message*/
-response: .asciz "The sum is %d and average is %d\n"
-
-/*Format pattern for scanf*/
-pattern: .asciz "%d"
-
-.data //non constant data
-/*The numbers read, the sum, the counter*/
-sum: .long 0
+//#include <cstdio>
+.data
+//int sum=0, input, count=0;
+sum: .word 0
 input: .word 0
 count: .word 0
 
-.text // program instruction code
+prompt: .asciz "Enter a positive integer and I'll add it to a running total (negative value entered to stop): "
+response: .asciz "The sum is %d and average is %d\n"
 
+pattern: .asciz "%d"
+
+.global main
+.text
 main:
-        push {lr}       //save return address
+//int main()
+        push {lr}
+input_lp:
+ 	//printf(prompt);
+        ldr r0, =prompt
+        bl printf
 
-        ldr r0, =prompt //r0 contains pointer to the prompt message
-        bl printf       //call printf to output the prompt message
-
-
-        ldr r0, =pattern //r0 contains pointer to format string for the scan pattern
-        ldr r1, =input   //r1 contains pointer to variable label where the first number is stored
-        bl scanf         //call to scanf
-
-	/*load value into register r1*/
-	ldr r1, =value
-	ldr r1, [r1]
-if_r1_ge_0:
-	cmp r1, #0
-	blt end_loop
-	ldr r5, =sum
-	ldr r4, =count
-	add r5, r5, r1
-	add r4, #1
-end_loop:
+	//scanf("%d", &input);
+        ldr r0, =pattern
+        ldr r1, =input
+        bl scanf
 	
+	ldr r2, =input
+	ldr r2, [r2]
+	
+if_r1_ge_0:
+	cmp r2, #0
+	//if (input < 0) break;
+	blt end_loop
+	//R5=sum; R4=count;
+	ldr r5, =sum
+	ldr r5, [r5]
+	ldr r4, =count
+	ldr r4, [r4]
+	//sum = sum + input;
+	//count++;
+	add r5, r5, r2
+	add r4, #1
+	b input_lp
+	
+end_loop:
+	//Initialize the working registers with the data
+    	//R0=R5;R1=0;R2=1;R3=R4;
+    	mov r0, r5
+    	mov r1, #0
+    	mov r2, #1
+    	mov r3, r4
+
 next:
         ldr r0, =response       /*r0 contains pointer to response message*/
         mov r1, r4      /*r1 contains pointer to value_read1*/
