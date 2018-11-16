@@ -95,26 +95,13 @@ subtract:
 	b subtract
 //Output the results
 output:
-	push {r0-r5}
-	//printf("The sum is %d and average is %d\n",sum, R1);
-	ldr r0, output
-	ldr r1, [sp,#20]
-	ldr r2, [sp,#16]
-	ldr r3, [sp,#4]
+	push {r0-r5} //Save the contents of r0-r5 on the stack
+	//printf("The sum is %d and average is %d\n",sum, R1); //sum is r5
+	ldr r0, response
+	ldr r1, [sp,#20] //add (# of values pushed) * 4 (4 is .word size)
+	ldr r2, [sp,#4]
 	bl printf
+	
+	add sp, #24 // clear stack
 
-	//printf("%d %% %d = %d\n",R5,R4,R0);
-	ldr r0, =output_2
-	ldr r1, [sp,#20]
-	ldr r2, [sp,#16]
-	ldr r3, [sp]
-	bl printf
-
-	// clean up the stack when done with temporary values for r0-r5 that were
-	// pushed on the stack
-	add sp, #24
-
-	// return value of 0
-	//return 0;
-	mov r0, #0
 	pop {pc}	//}
