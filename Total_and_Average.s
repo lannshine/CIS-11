@@ -14,9 +14,9 @@ pattern: .asciz "%d"
 .text
 main:
 //int main()
-        push {lr}
-input_lp:
- 	//printf(prompt);
+        push {lr}	//{
+user_input:
+ 	//printf("Enter a positive integer and I'll add it to a running total (negative value entered to stop): ");
         ldr r0, =prompt
         bl printf
 
@@ -31,7 +31,7 @@ input_lp:
 if_r1_ge_0:
 	cmp r2, #0
 	//if (input < 0) break;
-	blt end_loop
+	blt end_user_input
 	//R5=sum; R4=count;
 	ldr r5, =sum
 	ldr r5, [r5]
@@ -41,9 +41,9 @@ if_r1_ge_0:
 	//count++;
 	add r5, r5, r2
 	add r4, #1
-	b input_lp
+	b user_input
 	
-end_loop:
+end_user_input:
 	//Initialize the working registers with the data
     	//R0=R5;R1=0;R2=1;R3=R4;
     	mov r0, r5
@@ -51,22 +51,70 @@ end_loop:
     	mov r2, #1
     	mov r3, r4
 
-next:
-        ldr r0, =response       /*r0 contains pointer to response message*/
-        mov r1, r4      /*r1 contains pointer to value_read1*/
-        ldr r1, [r1]    /*r1 contains value dereferenced from r1 in previous instruction*/
-        mov r2, r5
-        ldr r2, [r2]
-        mov r3, r6
-        ldr r3, [r3]
+//Shift the denominator left until greater than numerator, then shift back
+shift_left:
+        //R3<<=1; //Denominator shift left
+	mov r3, r3, asl #1
+        //R2<<=1; //Division shift left
+	mov r2, r2, asl #1
+	//while (R0>R3);//Shift Left until Decrement/Division Greater than Numerator
+	cmp r0, r3
+	bgt shift_left //repeat shift_left if r0>r3
+	//R3>>=1; //Shift Denominator right
+	mov r3, r3, asr #1
+	//R2>>=1; //Shift Division right
+	mov r2, r2, asr #1
+	//Loop and keep subtracting off the shifted Denominator
 
-        ldr r7, =sum    /*r7 contains pointer to sum*/
-        ldr r8, [r7]    /*r8 contains value dereferenced from r7 in previous instruction*/
-        add r8, r1, r2  /*addition*/
-        add r8, r3
-        push {r8}       /*push r8 onto the stack*/
-        bl printf       /*call printf to output response message*/
-        add sp, #4      /*adjust sp because of push {r8}*/
+subtract:
+	//if(R0<R3)goto _output;
+	cmp r0, r3
+	blt output //skip to output if r0<r3
+	
+	//R1+=R2; //Increment division by the increment
+	add r1, r1, r2
+	//R0-=R3; //Subtract shifted Denominator with remainder of Numerator
+	sub r0, r0, r3
+	
+	//Shift right until denominator is less than numerator
+	shift_right:
+	//if(R2==1) goto _subtract;
+	cmp r2, #1
+	beq subtract //repeat subtract if r2=1
+	//if(R3<=R0)goto _subtract;
+	cmp r3, r0
+	ble subtract //repeat subtract if r3<=0
+		//R2>>=1; //Shift Increment Right
+		mov r2, r2, asr #1
+		//R3>>=1; //Shift Denominator Right
+		mov r3, r3, asr #1
+	//goto _shift_right; //Shift Denominator until less than Numerator
+	b shift_right
+	
+	//goto _subtract; //Keep Looping until the division is complete
+	b subtract
+//Output the results
+output:
+	push {r0-r5}
+	//printf("The sum is %d and average is %d\n",sum, R1);
+	ldr r0, output
+	ldr r1, [sp,#20]
+	ldr r2, [sp,#16]
+	ldr r3, [sp,#4]
+	bl printf
 
-        mov r0, #0      /*exit code 0 = program terminates normally*/
-	pop {pc}        /*exit the main function*/
+	//printf("%d %% %d = %d\n",R5,R4,R0);
+	ldr r0, =output_2
+	ldr r1, [sp,#20]
+	ldr r2, [sp,#16]
+	ldr r3, [sp]
+	bl printf
+
+	// clean up the stack when done with temporary values for r0-r5 that were
+	// pushed on the stack
+	add sp, #24
+
+	// return value of 0
+	//return 0;
+	mov r0, #0
+	pop {pc}	//}
