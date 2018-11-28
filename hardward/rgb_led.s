@@ -1,3 +1,13 @@
+//action: sudo code:
+//1. turn off last pin
+//2. turn on next pin
+//3. read in time(0) -> r0 holds the # sec since 1/1/1970 -> store in r4
+//4. read stop button
+//5. if pressed, goto step #8
+//6. if time(0) - r4 < delay, goto step #4
+//7. set r0 to 0
+//8. return from function r0
+
 // to compile: g++ rgb_led.s -lwiringPi -g -o rgb_led
 
 .equ INPUT, 0
