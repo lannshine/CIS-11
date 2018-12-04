@@ -8,7 +8,7 @@
 .equ YLW_PIN, 25	// wiringPi 25 - only drive has YELLOW PIN
 
 .equ STP_PIN, 29	// wiringPi 29 - STOP PIN
-.equ PAUSE_S, 1		// pause in seconds
+.equ FLASH_S, 5		// pause in seconds
 
 .section .rodata
 out_s: .asciz "%d, r4=%d, r5=%d\n"
@@ -36,8 +36,17 @@ main:
   
 	mov r0, #DRIVE_GRN_PIN
 	bl pinOn
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOff
+
+	mov r0, #DRIVE_RED_PIN
+	bl pinOff
+
+	mov r0, #YLW_PIN
+	bl pinOff
 lp:
-	//mov r2, #PAUSE_S
+	mov r2, #FLASH_S
 	bl action
 
 	cmp r0, #1
@@ -100,9 +109,87 @@ ped_passing:
 	mov r0, #WALK_GRN_PIN
 	bl pinOn
 
-	ldr r0, =#3000 //delay(3000); // delay for 3000 milliseconds or 3 seconds
+	ldr r0, =#5000 //delay(10000); // delay for 10000 milliseconds or 10 seconds
 	bl delay
- 	
+
+	//mov r1, #0
+//light_flash:
+	mov r0, #YLW_PIN
+	bl pinOn
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOn
+
+	ldr r0, =#500
+	bl delay
+
+	mov r0, #YLW_PIN
+	bl pinOff
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOff
+
+	ldr r0, =#500
+	bl delay
+//2nd	
+	mov r0, #YLW_PIN
+	bl pinOn
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOn
+
+	ldr r0, =#500
+	bl delay
+
+	mov r0, #YLW_PIN
+	bl pinOff
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOff
+
+	ldr r0, =#500
+	bl delay
+//3rd
+	mov r0, #YLW_PIN
+	bl pinOn
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOn
+
+	ldr r0, =#500
+	bl delay
+
+	mov r0, #YLW_PIN
+	bl pinOff
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOff
+
+	ldr r0, =#500
+	bl delay
+//4th
+	mov r0, #YLW_PIN
+	bl pinOn
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOn
+
+	ldr r0, =#500
+	bl delay
+
+	mov r0, #YLW_PIN
+	bl pinOff
+
+	mov r0, #WALK_GRN_PIN
+	bl pinOff
+
+	ldr r0, =#500
+	bl delay
+
+	//add r1, #1
+	//cmp r1, #400
+	//blt light_flash
+//stop_walk:
 	mov r0,	#DRIVE_GRN_PIN
 	bl pinOn
 
@@ -112,14 +199,12 @@ ped_passing:
 	mov r0, #WALK_GRN_PIN
 	bl pinOff
 
-	b action
-
 action: // r0 holds pin to turn off, r1 holds pin to turn on
 	// r2 holds the number of seconds to delay
 	// return value: r0=0, no user interation; r0=1 user pressed stop button
 	push {r4,r5,lr}
 
-	//move r5, r2
+	mov r5, r2
 
 	//mov r0, #0
 	//bl time
@@ -127,14 +212,8 @@ action: // r0 holds pin to turn off, r1 holds pin to turn on
 do_whl:
 	bl readStopButton
 	cmp r0, #HIGH
-	beq ped_passing 
-	//b action_done
-	//mov r0, #0
-	//bl time
-
-	//sub r0, r0, r4
-
-	//cmp r0, r5
+	beq ped_passing
+	
 	b do_whl
 	mov r0, #0
 action_done:
