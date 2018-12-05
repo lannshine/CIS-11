@@ -9,7 +9,7 @@
 
 .equ PED_PASS_PIN, 29	// wiringPi 29 - pedestrian passing pin
 .equ STP_PIN, 28	// wiringPi 29 - program stop pin
-.equ STOP_TRAFFIC_S, 6		// pause in seconds
+.equ STOP_TRAFFIC_S, 30		// pause in seconds
 
 .section .rodata
 message: .asciz "Press the middle button to walk.\n"
@@ -57,7 +57,7 @@ lp:
 	beq end_lp
 	
 	bal lp
-end_lp:
+end_lp: // terminate the program
 	mov r0, #WALK_GRN_PIN
 	bl pinOff
 
@@ -112,13 +112,13 @@ readWalkBotton:
 ped_passing:
 	push {lr}
 	
-	mov r0,	#YLW_PIN
+	mov r0,	#YLW_PIN // turn on yellow light for 3 seconds
 	bl pinOn
 
 	mov r0, #DRIVE_GRN_PIN
 	bl pinOff
 
-	ldr r0, =#2000 //delay(x); // delay for x milliseconds or x/1000 seconds
+	ldr r0, =#3000 //delay(x); // delay for x milliseconds or x/1000 seconds
 	bl delay
 
 	mov r0,	#DRIVE_RED_PIN
@@ -133,11 +133,11 @@ ped_passing:
 	mov r0, #WALK_GRN_PIN
 	bl pinOn
 
-	ldr r0, =#5000 //delay(x); // delay for x milliseconds or x/1000 seconds
+	ldr r0, =#30000 //stop driving for 30 seconds
 	bl delay
 
 	mov r4, #6
-light_flash:
+light_flash: // flash yellow light and walk green light 6 times
 	mov r0, #YLW_PIN
 	bl pinOn
 
@@ -158,7 +158,7 @@ light_flash:
 
 	subs r4, #1
 	bgt light_flash
-stop_walk:
+stop_walk: // stop walking, allow driving again
 	mov r0,	#DRIVE_GRN_PIN
 	bl pinOn
 
@@ -171,7 +171,7 @@ stop_walk:
 	pop {pc}
 
 action: // r2 holds the number of seconds for drive red light
-	// return value: r0=0, nothing happened; r0=1 user pressed stop button
+	// return value: r0=0, nothing happened; r0=1 stop button pressed, stops program
 	push {lr}
 	mov r5, r2
 do_whl:
