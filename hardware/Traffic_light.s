@@ -9,7 +9,7 @@
 
 .equ PED_PASS_PIN, 29	// wiringPi 29 - pedestrian passing pin
 .equ STP_PIN, 28	// wiringPi 29 - program stop pin
-.equ STOP_TRAFFIC_S, 5		// pause in seconds
+.equ STOP_TRAFFIC_S, 6		// pause in seconds
 
 .section .rodata
 message: .asciz "Press the middle button to walk.\n"
@@ -112,10 +112,22 @@ readWalkBotton:
 ped_passing:
 	push {lr}
 	
+	mov r0,	#YLW_PIN
+	bl pinOn
+
+	mov r0, #DRIVE_GRN_PIN
+	bl pinOff
+
+	ldr r0, =#2000 //delay(x); // delay for x milliseconds or x/1000 seconds
+	bl delay
+
 	mov r0,	#DRIVE_RED_PIN
 	bl pinOn
 
 	mov r0, #DRIVE_GRN_PIN
+	bl pinOff
+
+	mov r0,	#YLW_PIN
 	bl pinOff
 
 	mov r0, #WALK_GRN_PIN
